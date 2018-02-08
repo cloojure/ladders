@@ -81,6 +81,15 @@
 (dotest
   (is (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 0.1}))
   (is (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 0.3}))
-  (isnt (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 999}))
+  (isnt (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 999})) )
+
+(dotest
+  (running-stats-reset!)
+  (accumulate-email-stats {:email-address "xxx", :spam-score 1})
+  (is= @running-stats {:cum-spam-score 1.0 :cum-num-emails 1})
+  (accumulate-email-stats {:email-address "xxx", :spam-score 2})
+  (is= @running-stats {:cum-spam-score 3.0 :cum-num-emails 2})
+
+
   )
 

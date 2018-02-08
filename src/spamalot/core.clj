@@ -33,3 +33,17 @@
 (s/defn non-spammy-email :- s/Bool
   [email-rec :- tsk/Map ]
   (<= (grab :spam-score email-rec) max-spam-score))
+
+(def running-stats (atom nil))
+(defn running-stats-reset! []
+  (reset! running-stats {:cum-spam-score 0.0
+                         :cum-num-emails 0}))
+(s/defn accumulate-email-stats
+  [email-rec :- tsk/Map]
+  (let [cum-stats-update (s/fn [running-stats-curr :- tsk/Map]
+                           (it-> running-stats-curr
+                             (update it :cum-spam-score + (grab :spam-score email-rec))
+                             (update it :cum-num-emails inc)))]
+    (swap! running-stats cum-stats-update))
+
+  )
