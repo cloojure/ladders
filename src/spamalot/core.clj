@@ -3,7 +3,9 @@
   (:use tupelo.core)
   (:require
     [clojure.string :as str]
-    [schema.core :as s] ))
+    [schema.core :as s]
+    [tupelo.schema :as tsk]
+    ))
 
 (def emails-seen (atom nil))
 (defn email-seen-reset! []
@@ -27,3 +29,7 @@
   (while (< window-size (count @window))
     (swap! window pop)))
 
+(def max-spam-score 0.3)
+(s/defn non-spammy-email :- s/Bool
+  [email-rec :- tsk/Map ]
+  (<= (grab :spam-score email-rec) max-spam-score))

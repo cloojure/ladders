@@ -78,4 +78,9 @@
   (is (every? truthy? (mapv seen-email? ["aa" "bb" "cc"])))
   (is (every? falsey? (mapv seen-email? ["dd" "xx" "666"]))))
 
+(dotest
+  (is (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 0.1}))
+  (is (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 0.3}))
+  (isnt (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 999}))
+  )
 
