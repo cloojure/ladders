@@ -90,8 +90,8 @@
   (accumulate-email-stats {:email-address "xxx", :spam-score 2})
   (is= @cum-stats {:cum-spam-score 3.0 :cum-num-emails 2})
 
-  (cum-stats-reset!)
   (with-redefs [cum-spam-score-max 2]
+    (cum-stats-reset!)
     (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 1}))
     (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 2}))
     (isnt (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 3}))

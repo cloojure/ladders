@@ -5,7 +5,7 @@
     [clojure.string :as str]
     [schema.core :as s]
     [tupelo.schema :as tsk]
-    ))
+  ))
 
 ;-----------------------------------------------------------------------------
 (def emails-seen (atom nil))
@@ -71,4 +71,4 @@
 
 (s/defn accumulate-email-stats
   [email-rec :- tsk/Map]
-  (swap! cum-stats #(calc-cum-stats % email-rec)))
+  (swap! cum-stats calc-cum-stats  email-rec))
