@@ -64,7 +64,18 @@
        [4 [2 3 4]]
        [5 [3 4 5]]
        [6 [4 5 6]]
-       [7 [5 6 7]]]))
+       [7 [5 6 7]]])))
 
-  )
+(dotest
+  (email-seen-reset!)
+  (isnt (seen-email? "xx"))
+  (record-email "aa")
+  (is (seen-email? "aa"))
+  (isnt (seen-email? "bb"))
+  (record-email "bb")
+  (is (seen-email? "bb"))
+  (record-email "cc")
+  (is (every? truthy? (mapv seen-email? ["aa" "bb" "cc"])))
+  (is (every? falsey? (mapv seen-email? ["dd" "xx" "666"]))))
+
 
