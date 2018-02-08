@@ -84,12 +84,24 @@
   (isnt (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 999})) )
 
 (dotest
-  (running-stats-reset!)
+  (cum-stats-reset!)
   (accumulate-email-stats {:email-address "xxx", :spam-score 1})
-  (is= @running-stats {:cum-spam-score 1.0 :cum-num-emails 1})
+  (is= @cum-stats {:cum-spam-score 1.0 :cum-num-emails 1})
   (accumulate-email-stats {:email-address "xxx", :spam-score 2})
-  (is= @running-stats {:cum-spam-score 3.0 :cum-num-emails 2})
+  (is= @cum-stats {:cum-spam-score 3.0 :cum-num-emails 2})
 
+  (cum-stats-reset!)
+  (with-redefs [cum-spam-score-max 2]
+    (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 1}))
+    (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 2}))
+    (isnt (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 3}))
 
+    (accumulate-email-stats {:email-address "xxx", :spam-score 1})
+    (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 3}))
+    (isnt (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 4}))
+
+    (accumulate-email-stats {:email-address "xxx", :spam-score 3})
+    (is= {:cum-spam-score 4.0 :cum-num-emails 2} @cum-stats)
+  )
   )
 
