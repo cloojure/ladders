@@ -16,7 +16,7 @@
    ;[org.clojure/math.combinatorics "0.1.4"]
    ;[org.clojure/tools.analyzer       "0.6.9"]
     [prismatic/schema "1.1.7"]
-    [tupelo "0.9.71"]
+    [tupelo "0.9.72"]
   ]
   :profiles {:dev {:dependencies []
                    :plugins [
