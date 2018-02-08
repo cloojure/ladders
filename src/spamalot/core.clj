@@ -7,6 +7,7 @@
     [tupelo.schema :as tsk]
     ))
 
+;-----------------------------------------------------------------------------
 (def emails-seen (atom nil))
 (defn email-seen-reset! []
   (reset! emails-seen #{}))
@@ -18,6 +19,7 @@
   [email :- s/Str]
   (contains? @emails-seen email))
 
+;-----------------------------------------------------------------------------
 (def window-size 4)
 (def window (atom nil))
 (defn window-reset! []
@@ -29,15 +31,18 @@
   (while (< window-size (count @window))
     (swap! window pop)))
 
+;-----------------------------------------------------------------------------
 (def max-spam-score 0.3)
 (s/defn non-spammy-email :- s/Bool
   [email-rec :- tsk/Map ]
   (<= (grab :spam-score email-rec) max-spam-score))
 
+;-----------------------------------------------------------------------------
 (def running-stats (atom nil))
 (defn running-stats-reset! []
   (reset! running-stats {:cum-spam-score 0.0
                          :cum-num-emails 0}))
+(running-stats-reset!)
 (s/defn accumulate-email-stats
   [email-rec :- tsk/Map]
   (let [cum-stats-update (s/fn [running-stats-curr :- tsk/Map]
