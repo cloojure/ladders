@@ -8,25 +8,28 @@
   ))
 
 ;-----------------------------------------------------------------------------
-(def emails-seen (atom nil))
+(def Email {:email-address s/Str
+            :spam-score    s/Num})
+
+(def emails-seen (atom nil)) ; #todo how to tell Schema type = (atom {s/Str tsk/Map} )  ???
 
 (defn email-seen-reset! []
-  (reset! emails-seen #{}))
+  (reset! emails-seen {}))
 (email-seen-reset!)
 
 (s/defn record-email
-  [email :- s/Str]
-  (swap! emails-seen conj email))
+  [email :- Email]
+  (swap! emails-seen assoc (grab :email-address email) email))
 
 (s/defn seen-email? :- s/Bool
-  [email :- s/Str]
-  (contains? @emails-seen email))
+  [email :- Email]
+  (contains-key? @emails-seen (grab :email-address email)))
 
 ;-----------------------------------------------------------------------------
 (def max-spam-score 0.3)
 (s/defn non-spammy-email :- s/Bool
-  [email-rec :- tsk/Map ]
-  (<= (grab :spam-score email-rec) max-spam-score))
+  [email :- Email ]
+  (<= (grab :spam-score email) max-spam-score))
 
 ;-----------------------------------------------------------------------------
 (def cum-spam-score-max 0.05)
@@ -50,11 +53,11 @@
 
 (s/defn new-email-ok-cum-stats? :- s/Bool
   [email-rec :- tsk/Map]
-  (let [cum-stats-new (calc-cum-stats @cum-stats email-rec)
+  (let [cum-stats-new  (calc-cum-stats @cum-stats email-rec)
         cum-spam-score (/ (grab :cum-spam-score cum-stats-new)
-                          (grab :cum-num-emails cum-stats-new)) ]
+                         (grab :cum-num-emails cum-stats-new))]
     (<= cum-spam-score cum-spam-score-max)))
 
 (s/defn accumulate-email-stats
   [email-rec :- tsk/Map]
-  (swap! cum-stats calc-cum-stats  email-rec))
+  (swap! cum-stats calc-cum-stats email-rec))

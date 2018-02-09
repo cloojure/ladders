@@ -5,6 +5,7 @@
     [clojure.spec.test.alpha :as stest]
     [clojure.spec.gen.alpha :as gen]))
 
+; verify fifo window size when add new emails
 (dotest
   (with-redefs [window-size-max 3]
     (nl) (window-reset!)
@@ -22,6 +23,7 @@
          [6 [4 5 6] 5]
          [7 [5 6 7] 6]]))))
 
+; verify fifo window & window spam limit check
 (dotest
   (with-redefs [window-size-max 3
                 window-spam-score-max 4]

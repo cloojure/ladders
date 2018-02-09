@@ -7,7 +7,7 @@
     [clojure.spec.gen.alpha :as gen]
     ) )
 
-(def num-emails 5)
+(def num-emails 5)  ; controls number of emails in test
 
 (def email-domains
   #{"indeediot.com"
@@ -18,8 +18,7 @@
     "careershiller.com"
     "glassbore.com"})
 
-(def email-regex
-  #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
+(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
 
 (sp/def ::email-address
   (sp/with-gen
@@ -29,12 +28,11 @@
          (sp/gen email-domains))
        (gen/fmap (fn [[addr domain]] (str addr "@" domain))))))
 
-(sp/def ::spam-score
-  (sp/double-in :min 0 :max 1))
+(sp/def ::spam-score (sp/double-in :min 0 :max 1))
 
-(sp/def ::email-record
-  (sp/keys :req-un [::email-address ::spam-score]))
+(sp/def ::email-record (sp/keys :req-un [::email-address ::spam-score]))
 
+; validate email generation using spec
 (dotest
   (let [email-recs (vec (gen/sample (sp/gen ::email-record) num-emails))
         valid-flgs (forv [email-rec email-recs]
@@ -50,30 +48,38 @@
 
     (is (every? truthy? valid-flgs))))
 
+; verify recording emails as seen/unseen
 (dotest
-  (email-seen-reset!)
-  (isnt (seen-email? "xx"))
-  (record-email "aa")
-  (is (seen-email? "aa"))
-  (isnt (seen-email? "bb"))
-  (record-email "bb")
-  (is (seen-email? "bb"))
-  (record-email "cc")
-  (is (every? truthy? (mapv seen-email? ["aa" "bb" "cc"])))
-  (is (every? falsey? (mapv seen-email? ["dd" "xx" "666"]))))
+  (let [dummy-email (fn [addr] {:email-address addr :spam-score 0.1})]
+    (email-seen-reset!)
+    (isnt (seen-email? (dummy-email "aa")))
+    (record-email (dummy-email "aa"))
+    (is (seen-email? (dummy-email "aa")))
 
+    (isnt (seen-email? (dummy-email "bb")))
+    (record-email (dummy-email "bb"))
+    (is (seen-email? (dummy-email "bb")))
+
+    (record-email (dummy-email "cc"))
+    (is (every? truthy? (mapv seen-email? (mapv dummy-email ["aa" "bb" "cc"]))))
+    (is (every? falsey? (mapv seen-email? (mapv dummy-email ["dd" "xx" "666"]))))))
+
+; verify individual email spam test
 (dotest
   (is (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 0.1}))
   (is (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 0.3}))
   (isnt (non-spammy-email {:email-address "fred@monstrous.com", :spam-score 999})) )
 
+; verify cum email stats test
 (dotest
+  ; cum status works
   (cum-stats-reset!)
   (accumulate-email-stats {:email-address "xxx", :spam-score 1})
   (is= @cum-stats {:cum-spam-score 1.0 :cum-num-emails 1})
   (accumulate-email-stats {:email-address "xxx", :spam-score 2})
   (is= @cum-stats {:cum-spam-score 3.0 :cum-num-emails 2})
 
+  ; verify cum stats + check if new email within cum limits
   (with-redefs [cum-spam-score-max 2]
     (cum-stats-reset!)
     (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 1}))

@@ -32,5 +32,5 @@
   :test-paths         ["src"]
   :java-source-paths  ["src-java"]
   :target-path        "target/%s"
-  :jvm-opts           ["-Xms500m" "-Xmx2g"]
+  :jvm-opts           ["-Xms1g" "-Xmx4g"]
 )
