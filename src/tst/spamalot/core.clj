@@ -1,7 +1,6 @@
 (ns tst.spamalot.core
   (:use spamalot.core tupelo.core tupelo.test)
   (:require
-    [clojure.string :as str]
     [clojure.pprint :as pprint]
     [clojure.spec.alpha :as sp]
     [clojure.spec.test.alpha :as stest]
@@ -49,22 +48,7 @@
     ; {:email-address "2@careershiller.com", :spam-score 1.0}
     ; {:email-address "o9l0@glassbore.com", :spam-score 0.5}]
 
-    (is (every? truthy? valid-flgs)))
-
-  (nl) (window-reset!)
-  (with-redefs [window-size 3]
-    (is= (forv [ii (thru 7)]
-           (do
-             (add-to-window ii)
-             [ii (vec @window)]))
-      [[0 [0]]
-       [1 [0 1]]
-       [2 [0 1 2]]
-       [3 [1 2 3]]
-       [4 [2 3 4]]
-       [5 [3 4 5]]
-       [6 [4 5 6]]
-       [7 [5 6 7]]])))
+    (is (every? truthy? valid-flgs))))
 
 (dotest
   (email-seen-reset!)

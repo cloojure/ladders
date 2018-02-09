@@ -23,20 +23,6 @@
   (contains? @emails-seen email))
 
 ;-----------------------------------------------------------------------------
-(def window-size 4)
-(def window (atom nil))
-
-(defn window-reset! []
-  (reset! window clojure.lang.PersistentQueue/EMPTY))
-(window-reset!)
-
-(defn add-to-window
-  [arg]
-  (swap! window conj arg)
-  (while (< window-size (count @window))
-    (swap! window pop)))
-
-;-----------------------------------------------------------------------------
 (def max-spam-score 0.3)
 (s/defn non-spammy-email :- s/Bool
   [email-rec :- tsk/Map ]
