@@ -2,10 +2,40 @@
   "Contains the core functions for namespace `spamalot.core`."
   (:use tupelo.core)
   (:require
-    [clojure.string :as str]
+    [clojure.spec.alpha :as sp]
+    [clojure.spec.test.alpha :as stest]
+    [clojure.spec.gen.alpha :as gen]
     [schema.core :as s]
     [tupelo.schema :as tsk]
   ))
+
+(def num-emails 5)  ; controls number of emails in test
+
+(def email-domains
+  #{"indeediot.com"
+    "monstrous.com"
+    "linkedarkpattern.com"
+    "dired.com"
+    "lice.com"
+    "careershiller.com"
+    "glassbore.com"})
+
+(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
+
+(sp/def ::email-address
+  (sp/with-gen
+    (sp/and string? #(re-matches email-regex %))
+    #(->>
+       (gen/tuple (gen/such-that not-empty (gen/string-alphanumeric))
+         (sp/gen email-domains))
+       (gen/fmap (fn [[addr domain]] (str addr "@" domain))))))
+
+(sp/def ::spam-score (sp/double-in :min 0 :max 1))
+
+(sp/def ::email-record (sp/keys :req-un [::email-address ::spam-score]))
+
+(defn gen-emails [num]
+  (vec (gen/sample (sp/gen ::email-record) num)))
 
 ;-----------------------------------------------------------------------------
 (def Email {:email-address s/Str
@@ -61,3 +91,4 @@
 (s/defn accumulate-email-stats
   [email-rec :- tsk/Map]
   (swap! cum-stats calc-cum-stats email-rec))
+

@@ -5,36 +5,11 @@
     [clojure.spec.alpha :as sp]
     [clojure.spec.test.alpha :as stest]
     [clojure.spec.gen.alpha :as gen]
-    ) )
-
-(def num-emails 5)  ; controls number of emails in test
-
-(def email-domains
-  #{"indeediot.com"
-    "monstrous.com"
-    "linkedarkpattern.com"
-    "dired.com"
-    "lice.com"
-    "careershiller.com"
-    "glassbore.com"})
-
-(def email-regex #"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,63}$")
-
-(sp/def ::email-address
-  (sp/with-gen
-    (sp/and string? #(re-matches email-regex %))
-    #(->>
-       (gen/tuple (gen/such-that not-empty (gen/string-alphanumeric))
-         (sp/gen email-domains))
-       (gen/fmap (fn [[addr domain]] (str addr "@" domain))))))
-
-(sp/def ::spam-score (sp/double-in :min 0 :max 1))
-
-(sp/def ::email-record (sp/keys :req-un [::email-address ::spam-score]))
+    ))
 
 ; validate email generation using spec
 (dotest
-  (let [email-recs (vec (gen/sample (sp/gen ::email-record) num-emails))
+  (let [email-recs (gen-emails num-emails)
         valid-flgs (forv [email-rec email-recs]
                      (and
                        (contains-key? email-rec :email-address)
