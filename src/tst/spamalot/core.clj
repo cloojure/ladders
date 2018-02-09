@@ -69,6 +69,13 @@
 
     (accumulate-email-stats {:email-address "xxx", :spam-score 3})
     (is= {:cum-spam-score 4.0 :cum-num-emails 2} @cum-stats-state)
-  )
-  )
+  ))
+
+; end-to-end demo
+(dotest
+  (let [emails-gen (gen-emails 10)
+        emails-keep (filter-emails emails-gen) ]
+    (spyx-pretty emails-keep)
+
+  ))
 

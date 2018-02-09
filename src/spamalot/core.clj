@@ -1,10 +1,11 @@
 (ns spamalot.core
   "Contains the core functions for namespace `spamalot.core`."
-  (:use tupelo.core)
+  (:use spamalot.schema tupelo.core)
   (:require
     [clojure.spec.alpha :as sp]
     [clojure.spec.test.alpha :as stest]
     [clojure.spec.gen.alpha :as gen]
+    [spamalot.window :as wind]
     [schema.core :as s]
     [tupelo.schema :as tsk]
   ))
@@ -36,9 +37,6 @@
   (vec (gen/sample (sp/gen ::email-record) num)))
 
 ;-----------------------------------------------------------------------------
-(def Email {:email-address s/Str
-            :spam-score    s/Num})
-
 (def emails-state (ref nil)) ; #todo how to tell Schema type = (atom {s/Str tsk/Map} )  ???
 
 (defn email-seen-reset! [] (dosync (ref-set emails-state {})))
@@ -54,13 +52,12 @@
 
 ;-----------------------------------------------------------------------------
 (def max-spam-score 0.3)
+
 (s/defn non-spammy-email :- s/Bool
   [email :- Email ]
   (<= (grab :spam-score email) max-spam-score))
 
 ;-----------------------------------------------------------------------------
-(def CumStats {:cum-spam-score s/Num
-               :cum-num-emails s/Int})
 (def cum-spam-score-max 0.05)
 (def cum-stats-state (ref nil))
 
@@ -86,3 +83,23 @@
   [email :- Email]
   (dosync (alter cum-stats-state update-cum-stats email)))
 
+;-----------------------------------------------------------------------------
+(defn reset-state! []
+  (email-seen-reset!)
+  (wind/window-reset!)
+  (cum-stats-reset!))
+
+(s/defn email-complies? :- s/Bool
+  [email :- Email]
+  (and
+    (not (seen-email? email))
+    (non-spammy-email email)
+    (wind/new-email-ok-window? email)
+    (new-email-ok-cum-stats? email)))
+
+;-----------------------------------------------------------------------------
+(s/defn filter-emails :- [Email]
+  "Filter candidate emails using spam rules, return a list of compliant emails"
+  [emails-in :- [Email]]
+  (reset-state!)
+  (filter email-complies? emails-in))
