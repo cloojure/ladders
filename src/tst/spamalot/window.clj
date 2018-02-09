@@ -11,8 +11,8 @@
     (nl) (window-reset!)
     (let [result (forv [ii (thru 7)]
                    (do
-                     (swap! window-atom add-email-to-window {:email-address "x" :spam-score ii})
-                     [ii (mapv #(grab :spam-score %) @window-atom) (calc-window-spam-score @window-atom)]))]
+                     (dosync (alter window-state add-email-to-window {:email-address "x" :spam-score ii}))
+                     [ii (mapv #(grab :spam-score %) @window-state) (calc-window-spam-score @window-state)]))]
       (is= (spyx-pretty result)
         [[0 [0] 0]
          [1 [0 1] 1/2]
@@ -29,11 +29,11 @@
                 window-spam-score-max 4]
     (nl) (window-reset!)
     (let [result (forv [ii (thru 7)]
-                   (let [new-window (add-email-to-window @window-atom {:email-address "x" :spam-score ii})
+                   (let [new-window (add-email-to-window @window-state {:email-address "x" :spam-score ii})
                          new-spam-score (calc-window-spam-score new-window)]
                      (when (spam-score-ok? new-spam-score)
-                       (reset! window-atom new-window))
-                     [ii (mapv #(grab :spam-score %) @window-atom) (calc-window-spam-score @window-atom)]))]
+                       (dosync (ref-set window-state new-window)))
+                     [ii (mapv #(grab :spam-score %) @window-state) (calc-window-spam-score @window-state)]))]
       (is= (spyx-pretty result)
         [[0 [0] 0]
          [1 [0 1] 1/2]

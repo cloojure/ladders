@@ -39,18 +39,18 @@
 (def Email {:email-address s/Str
             :spam-score    s/Num})
 
-(def emails-seen (atom nil)) ; #todo how to tell Schema type = (atom {s/Str tsk/Map} )  ???
+(def emails-state (ref nil)) ; #todo how to tell Schema type = (atom {s/Str tsk/Map} )  ???
 
-(defn email-seen-reset! [] (reset! emails-seen {}))
+(defn email-seen-reset! [] (dosync (ref-set emails-state {})))
 (email-seen-reset!)
 
 (s/defn record-email
   [email :- Email]
-  (swap! emails-seen assoc (grab :email-address email) email))
+  (dosync (alter emails-state assoc (grab :email-address email) email)))
 
 (s/defn seen-email? :- s/Bool
   [email :- Email]
-  (contains-key? @emails-seen (grab :email-address email)))
+  (contains-key? @emails-state (grab :email-address email)))
 
 ;-----------------------------------------------------------------------------
 (def max-spam-score 0.3)
@@ -62,10 +62,10 @@
 (def CumStats {:cum-spam-score s/Num
                :cum-num-emails s/Int})
 (def cum-spam-score-max 0.05)
-(def cum-stats-atom (atom nil))
+(def cum-stats-state (ref nil))
 
 (s/defn cum-stats-reset! :- CumStats
-  [] (reset! cum-stats-atom {:cum-spam-score 0.0 :cum-num-emails 0}))
+  [] (dosync (ref-set cum-stats-state {:cum-spam-score 0.0 :cum-num-emails 0})))
 (cum-stats-reset!)
 
 (s/defn update-cum-stats
@@ -77,12 +77,12 @@
 
 (s/defn new-email-ok-cum-stats? :- s/Bool
   [email :- Email]
-  (let [cum-stats-new      (update-cum-stats @cum-stats-atom email)
+  (let [cum-stats-new      (update-cum-stats @cum-stats-state email)
         cum-spam-score-new (/ (grab :cum-spam-score cum-stats-new)
                              (grab :cum-num-emails cum-stats-new))]
     (<= cum-spam-score-new cum-spam-score-max)))
 
 (s/defn accumulate-email-stats
   [email :- Email]
-  (swap! cum-stats-atom update-cum-stats email))
+  (dosync (alter cum-stats-state update-cum-stats email)))
 

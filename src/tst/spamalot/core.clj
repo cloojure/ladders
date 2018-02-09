@@ -52,9 +52,9 @@
   ; cum status works
   (cum-stats-reset!)
   (accumulate-email-stats {:email-address "xxx", :spam-score 1})
-  (is= @cum-stats-atom {:cum-spam-score 1.0 :cum-num-emails 1})
+  (is= @cum-stats-state {:cum-spam-score 1.0 :cum-num-emails 1})
   (accumulate-email-stats {:email-address "xxx", :spam-score 2})
-  (is= @cum-stats-atom {:cum-spam-score 3.0 :cum-num-emails 2})
+  (is= @cum-stats-state {:cum-spam-score 3.0 :cum-num-emails 2})
 
   ; verify cum stats + check if new email within cum limits
   (with-redefs [cum-spam-score-max 2]
@@ -68,7 +68,7 @@
     (isnt (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 4}))
 
     (accumulate-email-stats {:email-address "xxx", :spam-score 3})
-    (is= {:cum-spam-score 4.0 :cum-num-emails 2} @cum-stats-atom)
+    (is= {:cum-spam-score 4.0 :cum-num-emails 2} @cum-stats-state)
   )
   )
 

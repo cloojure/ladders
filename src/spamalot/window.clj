@@ -8,10 +8,10 @@
 
 (def window-spam-score-max 0.1)
 (def window-size-max 4)
-(def window-atom (atom nil))
+(def window-state (ref nil))
 
 (def empty-window clojure.lang.PersistentQueue/EMPTY)
-(defn window-reset! [] (reset! window-atom empty-window))
+(defn window-reset! [] (dosync (ref-set window-state empty-window)))
 (window-reset!)
 
 (defn ensure-window-size-max [window]
@@ -33,10 +33,10 @@
 
 (s/defn new-email-ok-window? :- s/Bool
   [email :- Email]
-  (let [window-new       (add-email-to-window @window-atom email)
+  (let [window-new       (add-email-to-window @window-state email)
         window-score-new (calc-window-spam-score window-new)
         ok?              (spam-score-ok? window-score-new)]
     ok?))
 
 (s/defn accumulate-window-emails [email :- Email]
-  (swap! window-atom add-email-to-window email))
+  (dosync (alter window-state add-email-to-window email)))
