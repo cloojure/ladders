@@ -42,9 +42,9 @@
 (defn email-seen-reset! [] (dosync (ref-set emails-state {})))
 (email-seen-reset!)
 
-(s/defn record-email
+(s/defn accumulate-emails-sent
   [email :- Email]
-  (dosync (alter emails-state assoc (grab :email-address email) email)))
+  (alter emails-state assoc (grab :email-address email) email))
 
 (s/defn seen-email? :- s/Bool
   [email :- Email]
@@ -79,9 +79,9 @@
                              (grab :cum-num-emails cum-stats-new))]
     (<= cum-spam-score-new cum-spam-score-max)))
 
-(s/defn accumulate-email-stats
+(s/defn accumulate-cum-stats
   [email :- Email]
-  (dosync (alter cum-stats-state update-cum-stats email)))
+  (alter cum-stats-state update-cum-stats email))
 
 ;-----------------------------------------------------------------------------
 (defn reset-state! []
@@ -97,9 +97,21 @@
     (wind/new-email-ok-window? email)
     (new-email-ok-cum-stats? email)))
 
+(s/defn accumulate-email
+  [email :- Email]
+  (dosync
+    (accumulate-emails-sent email)
+    (wind/accumulate-window-emails email)
+    (accumulate-cum-stats email))
+  )
+
 ;-----------------------------------------------------------------------------
 (s/defn filter-emails :- [Email]
   "Filter candidate emails using spam rules, return a list of compliant emails"
   [emails-in :- [Email]]
   (reset-state!)
-  (filter email-complies? emails-in))
+  (lazy-gen
+    (doseq [email emails-in]
+      (when (email-complies? email)
+        (accumulate-email email)
+        (yield email)))))

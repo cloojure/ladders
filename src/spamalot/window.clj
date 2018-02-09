@@ -37,4 +37,4 @@
     (spam-score-ok? window-score-new)))
 
 (s/defn accumulate-window-emails [email :- Email]
-  (dosync (alter window-state add-email-to-window email)))
+  (alter window-state add-email-to-window email))

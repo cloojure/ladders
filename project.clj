@@ -4,6 +4,7 @@
   :license {:name "Eclipse Public License"
             :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [
+    [com.climate/claypoole "1.1.4"]
     [criterium "0.4.4"]
    ;[instaparse "1.4.8"]
     [org.clojure/clojure "1.9.0"]

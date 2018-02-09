@@ -28,11 +28,13 @@
   (with-redefs [window-size-max 3
                 window-spam-score-max 4]
     (nl) (window-reset!)
-    (let [result (forv [ii (thru 7)]
-                   (let [new-window (add-email-to-window @window-state {:email-address "x" :spam-score ii})
+    (let [dummy-email (fn [score] {:email-address "x" :spam-score score})
+          result (forv [ii (thru 7)]
+                   (let [email          (dummy-email ii)
+                         new-window     (add-email-to-window @window-state email)
                          new-spam-score (calc-window-spam-score new-window)]
                      (when (spam-score-ok? new-spam-score)
-                       (dosync (ref-set window-state new-window)))
+                       (dosync (accumulate-window-emails email)))
                      [ii (mapv #(grab :spam-score %) @window-state) (calc-window-spam-score @window-state)]))]
       (is= (spyx-pretty result)
         [[0 [0] 0]

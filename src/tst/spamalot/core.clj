@@ -30,14 +30,14 @@
   (email-seen-reset!)
   (let [dummy-email (fn [addr] {:email-address addr :spam-score 0.1})]
     (isnt (seen-email? (dummy-email "aa")))
-    (record-email (dummy-email "aa"))
+    (dosync (accumulate-emails-sent (dummy-email "aa")))
     (is (seen-email? (dummy-email "aa")))
 
     (isnt (seen-email? (dummy-email "bb")))
-    (record-email (dummy-email "bb"))
+    (dosync (accumulate-emails-sent (dummy-email "bb")))
     (is (seen-email? (dummy-email "bb")))
 
-    (record-email (dummy-email "cc"))
+    (dosync (accumulate-emails-sent (dummy-email "cc")))
     (is (every? truthy? (mapv seen-email? (mapv dummy-email ["aa" "bb" "cc"]))))
     (is (every? falsey? (mapv seen-email? (mapv dummy-email ["dd" "xx" "666"]))))))
 
@@ -51,9 +51,9 @@
 (dotest
   ; cum status works
   (cum-stats-reset!)
-  (accumulate-email-stats {:email-address "xxx", :spam-score 1})
+  (dosync (accumulate-cum-stats {:email-address "xxx", :spam-score 1}))
   (is= @cum-stats-state {:cum-spam-score 1.0 :cum-num-emails 1})
-  (accumulate-email-stats {:email-address "xxx", :spam-score 2})
+  (dosync (accumulate-cum-stats {:email-address "xxx", :spam-score 2}))
   (is= @cum-stats-state {:cum-spam-score 3.0 :cum-num-emails 2})
 
   ; verify cum stats + check if new email within cum limits
@@ -63,19 +63,19 @@
     (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 2}))
     (isnt (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 3}))
 
-    (accumulate-email-stats {:email-address "xxx", :spam-score 1})
+    (dosync (accumulate-cum-stats {:email-address "xxx", :spam-score 1}))
     (is (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 3}))
     (isnt (new-email-ok-cum-stats? {:email-address "xxx", :spam-score 4}))
 
-    (accumulate-email-stats {:email-address "xxx", :spam-score 3})
+    (dosync (accumulate-cum-stats {:email-address "xxx", :spam-score 3}))
     (is= {:cum-spam-score 4.0 :cum-num-emails 2} @cum-stats-state)
   ))
 
 ; end-to-end demo
 (dotest
-  (let [emails-gen (gen-emails 10)
+  (let [emails-gen (gen-emails 99)
         emails-keep (filter-emails emails-gen) ]
-    (spyx-pretty emails-keep)
+    (spyx-pretty (vec (take 10 emails-keep))))
 
-  ))
+  )
 
