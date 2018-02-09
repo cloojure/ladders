@@ -1,6 +1,7 @@
 (ns spamalot.window
   (:use tupelo.core)
   (:require
+    [spamalot.core :refer [Email]]
     [clojure.string :as str]
     [schema.core :as s]
     [tupelo.schema :as tsk] ))
@@ -30,3 +31,12 @@
 
 (defn spam-score-ok? [spam-score] (<= spam-score window-spam-score-max))
 
+(s/defn new-email-ok-window? :- s/Bool
+  [email :- Email]
+  (let [window-new       (add-email-to-window @window-atom email)
+        window-score-new (calc-window-spam-score window-new)
+        ok?              (spam-score-ok? window-score-new)]
+    ok?))
+
+(s/defn accumulate-window-emails [email :- Email]
+  (swap! window-atom add-email-to-window email))
